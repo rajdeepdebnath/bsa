@@ -6,6 +6,7 @@ import { myDataSource } from "./data-source";
 import { User } from "./entity/user";
 import { Individual } from "./entity/individual";
 import { State } from "./entity/state";
+import { MoreThan } from "typeorm";
 
 dotenv.config();
 
@@ -106,11 +107,46 @@ app.get("/process-states", async (req: Request, res: Response) => {
   });
 });
 
-app.get("/data", async (req: Request, res: Response) => {
-  const users = await myDataSource.getRepository(User).findBy({ id: 1 });
-  console.log(users);
+app.get("/map-ind-state", async (req: Request, res: Response) => {
+  let latestId = 0;
+  let indArr = await myDataSource
+    .getRepository(Individual)
+    .find({ where: { id: MoreThan(latestId) }, order: { id: "ASC" }, take: 5 });
 
-  res.json(users);
+  while (indArr.length > 0) {
+    for (let ind of indArr) {
+      await myDataSource.query(`call sp_ind_state(${ind.id})`);
+      latestId = ind.id;
+    }
+
+    indArr = await myDataSource.getRepository(Individual).find({
+      where: { id: MoreThan(latestId) },
+      order: { id: "ASC" },
+      take: 5,
+    });
+  }
+
+  res.json(indArr);
+});
+
+app.get("/allstates", async (req: Request, res: Response) => {
+  const states = await myDataSource
+    .getRepository(State)
+    .find({ select: { id: true, name: true }, order: { name: "ASC" } });
+
+  res.json(states);
+});
+
+app.get("/people-by-state/:state_id", async (req: Request, res: Response) => {
+  let state_id = parseInt(req.params.state_id);
+
+  const states = await myDataSource.getRepository(Individual).find({
+    where: { state_id: state_id },
+    select: { id: true, firstname: true, lastname: true },
+    order: { firstname: "ASC", lastname: "ASC" },
+  });
+
+  res.json(states);
 });
 
 app.get("/", (req: Request, res: Response) => {

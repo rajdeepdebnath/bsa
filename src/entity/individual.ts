@@ -12,6 +12,9 @@ export class Individual {
   @Column()
   lastname!: string;
 
+  @Column({ nullable: true })
+  state_id!: number;
+
   @Column()
   location!: string;
 
