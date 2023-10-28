@@ -1,0 +1,78 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  # bsaVPC:
+  #   Type: AWS::EC2::VPC
+  #   Properties:
+  #     CidrBlock: 10.0.0.0/24
+  #     EnableDnsSupport: true
+  #     EnableDnsHostnames: true
+  # bsaPublicSubnet:
+  #   Type: AWS::EC2::Subnet
+  #   Properties:
+  #     VpcId: !Ref bsaVPC
+  #     CidrBlock: 10.0.0.0/27
+  #     AvailabilityZone: "ap-south-1a"
+  #     MapPublicIpOnLaunch: true
+  # bsaPrivateSubnet:
+  #   Type: AWS::EC2::Subnet
+  #   Properties:
+  #     VpcId: !Ref bsaVPC
+  #     CidrBlock: 10.0.0.126/27
+  #     AvailabilityZone: "ap-south-1a"
+  #     MapPublicIpOnLaunch: false
+  # bsaIG:
+  #   Type: AWS::EC2::InternetGateway
+  #   Properties: {}
+  # bsaAttachGateway:
+  #   Type: AWS::EC2::VPCGatewayAttachment
+  #   Properties:
+  #     VpcId: !Ref bsaVPC
+  #     InternetGatewayId: !Ref bsaIG
+  # # bsaNetworkAcl:
+  # #   Type: AWS::EC2::NetworkAcl
+  # #   Properties:
+  # #     VpcId: !Ref bsaVPC
+
+  # bsaRouteTable:
+  #   Type: AWS::EC2::RouteTable
+  #   Properties:
+  #     VpcId: !Ref bsaVPC
+  # bsaRoute:
+  #   Type: AWS::EC2::Route
+  #   DependsOn: bsaIG
+  #   Properties:
+  #     RouteTableId: !Ref bsaRouteTable
+  #     DestinationCidrBlock: 0.0.0.0/0
+  #     GatewayId: !Ref bsaIG
+  # bsaPublicSubnetRouteTableAssociation:
+  #   Type: AWS::EC2::SubnetRouteTableAssociation
+  #   Properties:
+  #     SubnetId: !Ref bsaPublicSubnet
+  #     RouteTableId: !Ref bsaRouteTable
+  # bsaSG:
+  #   Type: AWS::EC2::SecurityGroup
+  #   Properties:
+  #     GroupDescription: Allow http to client host
+  #     VpcId: !Ref bsaVPC
+  #     SecurityGroupIngress:
+  #       - IpProtocol: tcp
+  #         FromPort: 80
+  #         ToPort: 80
+  #         CidrIp: 0.0.0.0/0
+  #     SecurityGroupEgress:
+  #       - IpProtocol: tcp
+  #         FromPort: 80
+  #         ToPort: 80
+  #         CidrIp: 0.0.0.0/0
+  bsaDB:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceClass: "db.t3.micro"
+      AllocatedStorage: "20"
+      # DBSubnetGroupName: !Ref bsaPublicSubnet
+      Engine: postgres
+      # EngineVersion: 8.0.16
+      MasterUsername: bsaadmin
+      MasterUserPassword: bsa1234567
+      DeletionProtection: false
+      DeleteAutomatedBackups: true

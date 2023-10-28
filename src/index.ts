@@ -1,153 +1,42 @@
 import express, { Express, Request, Response } from "express";
-import fs from "fs";
-import path from "path";
 import dotenv from "dotenv";
+import { uuid } from "uuidv4";
+import jwt from "jsonwebtoken";
 import { myDataSource } from "./data-source";
-import { User } from "./entity/user";
-import { Individual } from "./entity/individual";
-import { State } from "./entity/state";
-import { MoreThan } from "typeorm";
+import swaggerUi from "swagger-ui-express";
+import apiRouter from "./router/api-router";
+import processDataRouter from "./router/process-data-router";
+import { swaggerDocs } from "./swaggerOption";
 
 dotenv.config();
 
 const app: Express = express();
 const port = process.env.PORT || 3005;
 
-app.get("/process-individual", async (req: Request, res: Response) => {
-  const readableStream = fs.createReadStream(
-    path.join(__dirname, "../data/ind.csv"),
-    "utf8"
-  );
+app.use(express.json());
+app.use(
+  express.urlencoded({
+    extended: true,
+  })
+);
 
-  readableStream.on("error", function (error) {
-    console.log(`error: ${error.message}`);
-    res.send(`error: ${error.message}`);
-  });
+app.use("/api", apiRouter);
 
-  readableStream.on("data", async (chunk: string) => {
-    console.log(chunk);
-    if (chunk) {
-      let chunkarr = chunk.split("\r\n");
-      for (let chunkitem of chunkarr) {
-        console.log(chunkitem);
-        let strarr = chunkitem.split(",");
-        console.log(strarr.length);
-        if (strarr.length >= 3) {
-          let ind = myDataSource.getRepository(Individual).create();
-          ind.firstname = strarr[0];
-          ind.lastname = strarr[1];
-          ind.location = strarr.slice(2).join(",");
-          ind.geo_location = JSON.parse(ind.location).geometry;
-          await myDataSource.getRepository(Individual).save(ind);
-        }
-      }
-    }
-    console.log("done");
-    res.send(`done!`);
-  });
-});
+app.use("/process", processDataRouter);
 
-app.get("/process-states", async (req: Request, res: Response) => {
-  let fullPath = path.join(__dirname, "../data/states");
-  fs.readdir(fullPath, (error, files) => {
-    if (error) {
-      res.send(error);
-      return;
-    }
+app.post("/auth", (req: Request, res: Response) => {
+  let { username, password } = req.body;
 
-    function* getFileSequentially() {
-      for (let file of files) {
-        yield file;
-      }
-    }
-
-    let file_gen_fn = getFileSequentially();
-    let file_gen_obj = file_gen_fn.next();
-    if (!file_gen_obj.done) {
-      console.log(file_gen_obj);
-      processStateData(file_gen_obj.value);
-    }
-
-    function processStateData(file: string) {
-      let state_data = "";
-      const readableStream = fs.createReadStream(
-        path.join(__dirname, "../data/states", file),
-        "utf8"
-      );
-
-      readableStream.on("error", function (error) {
-        console.log(`error: ${error.message}`);
-        res.send(`error: ${error.message}`);
-      });
-
-      readableStream.on("data", async (chunk: string) => {
-        state_data += chunk;
-      });
-
-      readableStream.on("end", async () => {
-        console.log(file);
-        if (state_data) {
-          let obj = JSON.parse(state_data);
-          let ind = myDataSource.getRepository(State).create();
-          ind.name = file.replace(".geojson", "");
-          ind.map = obj.features[0];
-          ind.geo_map = obj.features[0].geometry;
-          await myDataSource.getRepository(State).save(ind);
-
-          file_gen_obj = file_gen_fn.next();
-          if (!file_gen_obj.done) {
-            console.log(file_gen_obj);
-            processStateData(file_gen_obj.value);
-          }
-        }
-      });
-    }
-
-    res.send(`done!`);
-  });
-});
-
-app.get("/map-ind-state", async (req: Request, res: Response) => {
-  let latestId = 0;
-  let indArr = await myDataSource
-    .getRepository(Individual)
-    .find({ where: { id: MoreThan(latestId) }, order: { id: "ASC" }, take: 5 });
-
-  while (indArr.length > 0) {
-    for (let ind of indArr) {
-      await myDataSource.query(`call sp_ind_state(${ind.id})`);
-      latestId = ind.id;
-    }
-
-    indArr = await myDataSource.getRepository(Individual).find({
-      where: { id: MoreThan(latestId) },
-      order: { id: "ASC" },
-      take: 5,
-    });
+  if (username === process.env.USERNAME && password === process.env.PASSWORD) {
+    //jwt token
+    res.send("");
+    return;
   }
 
-  res.json(indArr);
+  res.send("Express + TypeScript Server 1");
 });
 
-app.get("/allstates", async (req: Request, res: Response) => {
-  const states = await myDataSource
-    .getRepository(State)
-    .find({ select: { id: true, name: true }, order: { name: "ASC" } });
-
-  res.json(states);
-});
-
-app.get("/people-by-state/:state_id", async (req: Request, res: Response) => {
-  let state_id = parseInt(req.params.state_id);
-
-  const states = await myDataSource.getRepository(Individual).find({
-    where: { state_id: state_id },
-    select: { id: true, firstname: true, lastname: true },
-    order: { firstname: "ASC", lastname: "ASC" },
-  });
-
-  res.json(states);
-});
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Express + TypeScript Server 1");

@@ -1,0 +1,4 @@
+GET http://localhost:3002/api/allstates
+
+
+GET http://localhost:3002/api/people-by-state/1

@@ -1,0 +1,7 @@
+POST http://localhost:3002/auth
+content-type: application/json
+
+{
+    "username":"bsa",
+    "password":"password"
+}

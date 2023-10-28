@@ -15,11 +15,18 @@
     "@types/geojson": "^7946.0.12",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
     "pg": "^8.11.3",
-    "typeorm": "^0.3.17"
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.0",
+    "typeorm": "^0.3.17",
+    "uuidv4": "^6.2.13"
   },
   "devDependencies": {
     "@types/express": "^4.17.20",
+    "@types/jsonwebtoken": "^9.0.4",
+    "@types/swagger-jsdoc": "^6.0.2",
+    "@types/swagger-ui-express": "^4.1.5",
     "concurrently": "^8.2.2",
     "nodemon": "^3.0.1",
     "typescript": "^5.2.2"
