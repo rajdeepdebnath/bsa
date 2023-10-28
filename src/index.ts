@@ -4,9 +4,9 @@ import { uuid } from "uuidv4";
 import jwt from "jsonwebtoken";
 import { myDataSource } from "./data-source";
 import swaggerUi from "swagger-ui-express";
-import apiRouter from "./router/api-router";
-import processDataRouter from "./router/process-data-router";
-import { swaggerDocs } from "./swaggerOption";
+import apiRouter from "./routes/api-router";
+import processDataRouter from "./routes/process-data-router";
+import { swaggerDocs } from "./swaggerDocs";
 
 dotenv.config();
 

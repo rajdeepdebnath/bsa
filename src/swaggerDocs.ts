@@ -1,4 +1,5 @@
 import swaggerJsdoc from "swagger-jsdoc";
+import path from "path";
 
 const swaggerOption = {
   swaggerDefinition: {
@@ -9,10 +10,10 @@ const swaggerOption = {
       contact: {
         name: "Rajdeep Debnath",
       },
-      servers: ["http://localhost:3002/"],
+      servers: [`http://localhost:3002/`],
     },
   },
-  apis: ["index.js", "./routes/*.js"],
+  apis: [path.join(__dirname, "/routes/*.js")],
 };
 
 export const swaggerDocs = swaggerJsdoc(swaggerOption);

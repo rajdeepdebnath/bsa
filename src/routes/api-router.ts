@@ -1,10 +1,22 @@
 import express, { Express, Request, Response } from "express";
+import { Get, Route } from "tsoa";
 import { myDataSource } from "../data-source";
 import { State } from "../entity/state";
 import { Individual } from "../entity/individual";
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * /api/allstates:
+ *   get:
+ *     description: Get all states
+ *     responses:
+ *       200:
+ *         description: Success
+ *     tags:
+ *       - Get all states
+ */
 router.get("/allstates", async (req: Request, res: Response) => {
   const states = await myDataSource
     .getRepository(State)
