@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import { myDataSource } from "./data-source";
 import { User } from "./entity/user";
 import { Individual } from "./entity/individual";
+import { State } from "./entity/state";
 
 dotenv.config();
 
@@ -41,6 +42,66 @@ app.get("/process-individual", async (req: Request, res: Response) => {
       }
     }
     console.log("done");
+    res.send(`done!`);
+  });
+});
+
+app.get("/process-states", async (req: Request, res: Response) => {
+  let fullPath = path.join(__dirname, "../data/states");
+  fs.readdir(fullPath, (error, files) => {
+    if (error) {
+      res.send(error);
+      return;
+    }
+
+    function* getFileSequentially() {
+      for (let file of files) {
+        yield file;
+      }
+    }
+
+    let file_gen_fn = getFileSequentially();
+    let file_gen_obj = file_gen_fn.next();
+    if (!file_gen_obj.done) {
+      console.log(file_gen_obj);
+      processStateData(file_gen_obj.value);
+    }
+
+    function processStateData(file: string) {
+      let state_data = "";
+      const readableStream = fs.createReadStream(
+        path.join(__dirname, "../data/states", file),
+        "utf8"
+      );
+
+      readableStream.on("error", function (error) {
+        console.log(`error: ${error.message}`);
+        res.send(`error: ${error.message}`);
+      });
+
+      readableStream.on("data", async (chunk: string) => {
+        state_data += chunk;
+      });
+
+      readableStream.on("end", async () => {
+        console.log(file);
+        if (state_data) {
+          let obj = JSON.parse(state_data);
+          let ind = myDataSource.getRepository(State).create();
+          ind.name = file.replace(".geojson", "");
+          ind.map = obj.features[0];
+          ind.geo_map = obj.features[0].geometry;
+          await myDataSource.getRepository(State).save(ind);
+
+          file_gen_obj = file_gen_fn.next();
+          if (!file_gen_obj.done) {
+            console.log(file_gen_obj);
+            processStateData(file_gen_obj.value);
+          }
+        }
+      });
+    }
+
     res.send(`done!`);
   });
 });

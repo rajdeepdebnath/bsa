@@ -1,4 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn } from "typeorm";
+import { MultiPolygon } from "geojson";
 
 @Entity("State")
 export class State {
@@ -10,4 +11,7 @@ export class State {
 
   @Column()
   map!: string;
+
+  @Column({ type: "geometry" })
+  geo_map!: MultiPolygon;
 }

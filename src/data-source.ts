@@ -1,7 +1,10 @@
 import { DataSource } from "typeorm";
+import dotenv from "dotenv";
 import { User } from "./entity/user";
 import { Individual } from "./entity/individual";
 import { State } from "./entity/state";
+
+dotenv.config();
 
 export const myDataSource = new DataSource({
   type: "postgres",
