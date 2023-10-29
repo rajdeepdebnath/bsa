@@ -1,14 +1,12 @@
-FROM node:18-alpine
+FROM public.ecr.aws/lambda/nodejs:18
 
-WORKDIR /usr/src/app
+#WORKDIR /usr/src/app
 
-COPY package*.json ./
+COPY package*.json  ${LAMBDA_TASK_ROOT}
 RUN npm install
 # If you are building your code for production
 # RUN npm ci --omit=dev
 
-COPY dist/ .
+COPY dist/  ${LAMBDA_TASK_ROOT}
 
-EXPOSE 3002
-
-CMD [ "node", "index.js" ]
+CMD [ "lambda.handler" ]

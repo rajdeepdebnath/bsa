@@ -11,7 +11,7 @@ import { swaggerDocs } from "./swaggerDocs";
 dotenv.config();
 
 const app: Express = express();
-const port = process.env.PORT || 3005;
+const port = process.env.PORT;
 
 app.use(express.json());
 app.use(
@@ -42,13 +42,17 @@ app.get("/", (req: Request, res: Response) => {
   res.send("Express + TypeScript Server 1");
 });
 
-app.listen(port, async () => {
-  try {
-    await myDataSource.initialize();
+if (process.env.ENVIRONMENT !== "production") {
+  app.listen(port, async () => {
+    try {
+      await myDataSource.initialize();
 
-    console.log("Data Source has been initialized!");
-    console.log(`⚡️[server]: Server is running at http://localhost:${port}`);
-  } catch (error) {
-    console.error("Error during Data Source initialization:", error);
-  }
-});
+      console.log("Data Source has been initialized!");
+      console.log(`⚡️[server]: Server is running at http://localhost:${port}`);
+    } catch (error) {
+      console.error("Error during Data Source initialization:", error);
+    }
+  });
+}
+
+export { app };

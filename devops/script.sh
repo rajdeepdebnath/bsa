@@ -9,7 +9,17 @@ echo "docker image build starting"
 docker build --no-cache  -t bsa -f devops/Dockerfile .
 echo "docker image generated"
 
-aws ecr get-login-password --region ap-south-1 
+AWS_CLI_VERSION=$(aws --version)
+
+echo $AWS_CLI_VERSION
+
+if [[ $AWS_CLI_VERSION == "" ]]; then
+    echo "ERROR: Command 'aws' not found, please install 'awscli' and continue."
+    echo "Once installed run 'aws configure' to configure aws credentials."
+    exit 1
+fi
+
+docker login --username AWS --password $(aws ecr get-login-password --region ap-south-1) 277991196711.dkr.ecr.ap-south-1.amazonaws.com
 docker tag bsa:latest 277991196711.dkr.ecr.ap-south-1.amazonaws.com/bsa:latest
 docker push 277991196711.dkr.ecr.ap-south-1.amazonaws.com/bsa:latest
 echo "pushed to AWS ECR"
