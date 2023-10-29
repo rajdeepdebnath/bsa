@@ -33,13 +33,13 @@ app.post("/auth", (req: Request, res: Response) => {
     return;
   }
 
-  res.send("Express + TypeScript Server 1");
+  res.send("BSA API");
 });
 
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 app.get("/", (req: Request, res: Response) => {
-  res.send("Express + TypeScript Server 1");
+  res.send("BSA API");
 });
 
 if (process.env.ENVIRONMENT !== "production") {
