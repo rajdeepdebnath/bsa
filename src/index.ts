@@ -53,6 +53,10 @@ if (process.env.ENVIRONMENT !== "production") {
       console.error("Error during Data Source initialization:", error);
     }
   });
+} else {
+  myDataSource
+    .initialize()
+    .then((dataSource) => console.log("Data Source has been initialized!"));
 }
 
 export { app };

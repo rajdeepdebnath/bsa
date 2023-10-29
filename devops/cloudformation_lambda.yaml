@@ -1,40 +1,124 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Parameters:
-  LambdaExecutionRoleArn:
-    Description: Lambda role Arn
+  LambdaFunctionName:
     Type: String
-    Default: arn:aws:iam::xxxxxxxxxx:role/LambdaRole
-  Image:
+    AllowedPattern: "[a-zA-Z0-9]+[a-zA-Z0-9-]+[a-zA-Z0-9]+"
+    Default: bsa-lambda
+  LambdaImage:
     Description: Container image uri
     Type: String
     Default: xxxxxxxxxx.dkr.ecr.us-east-1.amazonaws.com/image_name:latest
-  Environment:
+  LambdaExecutionEnvironment:
     Description: Execution environment
     Type: String
     AllowedValues:
       - production
     Default: production
-  Port:
+  LambdaContainerPort:
     Description: Container port
     Type: String
     Default: 3002
-  RdsDbUrl:
+  LambdaRdsDbUrl:
     Description: RDS url
     Type: String
+  ApiGatewayName:
+    Type: String
+    Default: bsa-api
+  ApiGatewayStageName:
+    Type: String
+    AllowedPattern: "[a-z0-9]+"
+    Default: prod
 Resources:
+  LambdaIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      Policies:
+        - PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Effect: Allow
+                Resource:
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${LambdaFunctionName}:*
+          PolicyName: lambda
+
   LambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
+      FunctionName: !Ref LambdaFunctionName
       PackageType: Image
-      Role: !Ref "LambdaExecutionRoleArn"
+      Role: !GetAtt LambdaIAMRole.Arn
       Code:
-        ImageUri: !Ref "Image"
+        ImageUri: !Ref "LambdaImage"
       Architectures:
         - x86_64
       MemorySize: 1024
       Timeout: 300
       Environment:
         Variables:
-          ENVIRONMENT: !Ref Environment
-          PORT: !Ref Port
-          RDS_DB: !Ref RdsDbUrl
+          ENVIRONMENT: !Ref LambdaExecutionEnvironment
+          PORT: !Ref LambdaContainerPort
+          RDS_DB: !Ref LambdaRdsDbUrl
+
+  LambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${LambdaFunctionName}
+      RetentionInDays: 90
+
+  LambdaApiGatewayInvoke:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt LambdaFunction.Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/${ApiGatewayStageName}/GET/
+
+  ApiGateway:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+      Name: !Ref ApiGatewayName
+
+  ApiGatewayRootMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: GET
+      Integration:
+        IntegrationHttpMethod: GET
+        Type: AWS_PROXY
+        Uri: !Sub
+          - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${lambdaArn}/invocations
+          - lambdaArn: !GetAtt LambdaFunction.Arn
+      ResourceId: !GetAtt
+        - ApiGateway
+        - RootResourceId
+      RestApiId: !Ref ApiGateway
+
+  ApiGatewayDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn: ApiGatewayRootMethod
+    Properties:
+      RestApiId: !Ref ApiGateway
+      StageName: !Ref ApiGatewayStageName
+Outputs:
+  ApiGatewayInvokeURL:
+    Value: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${ApiGatewayStageName}
+
+  LambdaArn:
+    Value: !GetAtt LambdaFunction.Arn

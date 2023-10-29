@@ -19,9 +19,9 @@ if [[ $AWS_CLI_VERSION == "" ]]; then
     exit 1
 fi
 
-docker login --username AWS --password $(aws ecr get-login-password --region ap-south-1) 277991196711.dkr.ecr.ap-south-1.amazonaws.com
-docker tag bsa:latest 277991196711.dkr.ecr.ap-south-1.amazonaws.com/bsa:latest
-docker push 277991196711.dkr.ecr.ap-south-1.amazonaws.com/bsa:latest
+docker login --username AWS --password $(aws ecr get-login-password --region ap-south-1) xxxxxxxxxx.dkr.ecr.ap-south-1.amazonaws.com
+docker tag bsa:latest xxxxxxxxxx.dkr.ecr.ap-south-1.amazonaws.com/bsa:latest
+docker push xxxxxxxxxx.dkr.ecr.ap-south-1.amazonaws.com/bsa:latest
 echo "pushed to AWS ECR"
 
 echo "shell script finished!"
