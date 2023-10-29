@@ -8,6 +8,17 @@ import { Individual } from "../entity/individual";
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * /process/individual:
+ *   get:
+ *     description: Processes individual.csv
+ *     responses:
+ *       200:
+ *         description: Success
+ *     tags:
+ *       - Data seeding & processing
+ */
 router.get("/individual", async (req: Request, res: Response) => {
   const readableStream = fs.createReadStream(
     path.join(__dirname, "../data/ind.csv"),
@@ -42,6 +53,17 @@ router.get("/individual", async (req: Request, res: Response) => {
   });
 });
 
+/**
+ * @swagger
+ * /process/states:
+ *   get:
+ *     description: Process all states/*.geojson
+ *     responses:
+ *       200:
+ *         description: Success
+ *     tags:
+ *       - Data seeding & processing
+ */
 router.get("/states", async (req: Request, res: Response) => {
   let fullPath = path.join(__dirname, "../data/states");
   fs.readdir(fullPath, (error, files) => {
@@ -102,7 +124,18 @@ router.get("/states", async (req: Request, res: Response) => {
   });
 });
 
-router.get("/ind-state", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /process/map-ind-state:
+ *   get:
+ *     description: Maps Individual to state
+ *     responses:
+ *       200:
+ *         description: Success
+ *     tags:
+ *       - Data seeding & processing
+ */
+router.get("/map-ind-state", async (req: Request, res: Response) => {
   let latestId = 0;
   let indArr = await myDataSource
     .getRepository(Individual)
